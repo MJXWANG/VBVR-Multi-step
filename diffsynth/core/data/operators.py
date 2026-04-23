@@ -2,7 +2,10 @@ import math
 import torch, torchvision, imageio, os
 import imageio.v3 as iio
 from PIL import Image
-import torchaudio
+try:
+    import torchaudio
+except (ImportError, OSError):
+    torchaudio = None
 
 
 class DataProcessingPipeline:
