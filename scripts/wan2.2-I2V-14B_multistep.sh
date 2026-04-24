@@ -87,7 +87,6 @@ accelerate launch \
     --lora_base_model 'dit' \
     --lora_target_modules 'q,k,v,o,ffn.0,ffn.2' \
     --lora_rank ${LORA_RANK} \
-    --lora_checkpoint ${VBVR_LORA_HIGH} \
     --extra_inputs 'input_image' \
     --max_timestep_boundary 0.358 \
     --min_timestep_boundary 0 \
@@ -122,7 +121,6 @@ accelerate launch \
     --lora_base_model 'dit' \
     --lora_target_modules 'q,k,v,o,ffn.0,ffn.2' \
     --lora_rank ${LORA_RANK} \
-    --lora_checkpoint ${VBVR_LORA_LOW} \
     --extra_inputs 'input_image' \
     --max_timestep_boundary 1 \
     --min_timestep_boundary 0.358 \
