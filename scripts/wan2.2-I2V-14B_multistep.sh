@@ -79,7 +79,7 @@ accelerate launch \
     --width ${WIDTH} \
     --num_frames ${NUM_FRAMES} \
     --dataset_repeat ${DATASET_REPEAT} \
-    --model_id_with_origin_paths "${MODEL_DIR}:high_noise_model/diffusion_pytorch_model*.safetensors,${MODEL_DIR}:models_t5_umt5-xxl-enc-bf16.pth,${MODEL_DIR}:Wan2.1_VAE.pth" \
+    --model_paths "$(echo ${MODEL_DIR}/high_noise_model/diffusion_pytorch_model*.safetensors | tr ' ' ','),${MODEL_DIR}/models_t5_umt5-xxl-enc-bf16.pth,${MODEL_DIR}/Wan2.1_VAE.pth" \
     --learning_rate ${LEARNING_RATE} \
     --num_epochs ${NUM_EPOCHS} \
     --remove_prefix_in_ckpt ${REMOVE_PREFIX_IN_CKPT} \
@@ -114,7 +114,7 @@ accelerate launch \
     --width ${WIDTH} \
     --num_frames ${NUM_FRAMES} \
     --dataset_repeat ${DATASET_REPEAT} \
-    --model_id_with_origin_paths "${MODEL_DIR}:low_noise_model/diffusion_pytorch_model*.safetensors,${MODEL_DIR}:models_t5_umt5-xxl-enc-bf16.pth,${MODEL_DIR}:Wan2.1_VAE.pth" \
+    --model_paths "$(echo ${MODEL_DIR}/low_noise_model/diffusion_pytorch_model*.safetensors | tr ' ' ','),${MODEL_DIR}/models_t5_umt5-xxl-enc-bf16.pth,${MODEL_DIR}/Wan2.1_VAE.pth" \
     --learning_rate ${LEARNING_RATE} \
     --num_epochs ${NUM_EPOCHS} \
     --remove_prefix_in_ckpt ${REMOVE_PREFIX_IN_CKPT} \
