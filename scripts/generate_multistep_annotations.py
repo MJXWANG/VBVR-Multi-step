@@ -35,6 +35,7 @@ def main():
     parser.add_argument("--data_root", required=True, help="Root dir containing Multi-XX_* task folders")
     parser.add_argument("--output_configs", default="configs/per_tasks", help="Dir for per-task JSONs")
     parser.add_argument("--output_dataset_config", default="configs/multistep_dataset.json", help="Output dataset config")
+    parser.add_argument("--max_samples", type=int, default=None, help="Max samples per task (None = all)")
     args = parser.parse_args()
 
     data_root = Path(args.data_root)
@@ -52,6 +53,8 @@ def main():
         if not entries:
             print(f"  SKIP {task_name}: no valid samples")
             continue
+        if args.max_samples is not None:
+            entries = entries[:args.max_samples]
 
         annotation_path = out_dir / f"{task_name}.json"
         with open(annotation_path, "w") as f:
