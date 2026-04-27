@@ -36,6 +36,7 @@ def main():
     parser.add_argument("--output_configs", default="configs/per_tasks", help="Dir for per-task JSONs")
     parser.add_argument("--output_dataset_config", default="configs/multistep_dataset.json", help="Output dataset config")
     parser.add_argument("--max_samples", type=int, default=None, help="Max samples per task (None = all)")
+    parser.add_argument("--skip_samples", type=int, default=0, help="Skip first N samples per task")
     args = parser.parse_args()
 
     data_root = Path(args.data_root)
@@ -53,6 +54,8 @@ def main():
         if not entries:
             print(f"  SKIP {task_name}: no valid samples")
             continue
+        if args.skip_samples > 0:
+            entries = entries[args.skip_samples:]
         if args.max_samples is not None:
             entries = entries[:args.max_samples]
 
