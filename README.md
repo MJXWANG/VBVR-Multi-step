@@ -1,227 +1,155 @@
-## VBVR: A Very Big Video Reasoning Suite
+# VBVR-Multi-step: Multi-step Video Reasoning
 
-<div align="center">
+Train video generation models to perform multi-step reasoning — solving mazes, executing logic puzzles, simulating physics, and constructing geometric proofs — all as video generation.
 
-<p align="center">
-    <a href="https://video-reason.com/" target="_blank">
-        <img alt="Homepage" src="https://img.shields.io/badge/Project%20-%20Homepage-4285F4" height="20" />
-    </a>
-    <a href="https://arxiv.org/abs/2602.20159" target="_blank">
-        <img alt="arXiv" src="https://img.shields.io/badge/arXiv-VBVR_paper-red?logo=arxiv" height="20" />
-    </a>
-    <a href="https://huggingface.co/Video-Reason/VBVR-Wan2.2" target="_blank">
-        <img alt="VBVR-Wan2.2" src="https://img.shields.io/badge/%F0%9F%A4%97%20_VBVR_Wan2.2-Models-ffc107?color=ffc107&logoColor=white" height="20" />
-    </a>
-    <a href="https://huggingface.co/datasets/Video-Reason/VBVR-Dataset" target="_blank">
-        <img alt="VBVR-Dataset" src="https://img.shields.io/badge/%F0%9F%A4%97%20_VBVR-Dataset-ffc107?color=ffc107&logoColor=white" height="20" />
-    </a>
-    <a href="https://huggingface.co/datasets/Video-Reason/VBVR-Bench-Data" target="_blank">
-        <img alt="VBVR-Bench-Data" src="https://img.shields.io/badge/%F0%9F%A4%97%20_VBVR_Bench-Dataset-ffc107?color=ffc107&logoColor=white" height="20" />
-    </a>
-    <a href="https://huggingface.co/spaces/Video-Reason/VBVR-Bench-Leaderboard" target="_blank">
-        <img alt="Leaderboard" src="https://img.shields.io/badge/%F0%9F%A4%97%20_VBVR_Bench-Leaderboard-ffc107?color=ffc107&logoColor=white" height="20" />
-    </a>
-    <a href="https://github.com/Video-Reason/VBVR-EvalKit" target="_blank">
-        <img alt="Code" src="https://img.shields.io/badge/Evaluation_code-VBVR_Bench-100000?style=flat-square&logo=github&logoColor=white" height="20" />
-    </a>
-    <a href="https://github.com/Video-Reason/VBVR-Wan2.2" target="_blank">
-        <img alt="Code" src="https://img.shields.io/badge/Training_code-VBVR_Wan2.2-100000?style=flat-square&logo=github&logoColor=white" height="20" />
-    </a>
-    <a href="https://github.com/Video-Reason/VBVR-DataFactory" target="_blank">
-        <img alt="Code" src="https://img.shields.io/badge/Data_code-VBVR_DataFactory-100000?style=flat-square&logo=github&logoColor=white" height="20" />
-    </a>
-    <a href="https://www.youtube.com/watch?v=Gs9TPZmzo-s" target="_blank">
-        <img alt="Video" src="https://img.shields.io/badge/YouTube-Video-FF0000?logo=YouTube&logoColor=white" height="20" />
-    </a>
-</p>
+Built on [VBVR-Wan2.2](https://github.com/Video-Reason/VBVR-Wan2.2) (DiffSynth framework). Fine-tunes **Wan2.2-I2V-A14B** (14B parameter dual-DiT video diffusion model) with LoRA adapters on 170K multi-step reasoning videos.
 
-</div>
-
-This repository provides the training and inference code for the **VBVR** (A Very Big Video Reasoning Suite) project. We support fine-tuning **Wan2.2-I2V-A14B** and **LTX-2.3** video generation models on the VBVR dataset and evaluating them on the VBVR-Bench benchmark.
-
+## Quick Start
 
 ### 1. Installation
 
 ```bash
-git clone https://github.com/Video-Reason/VBVR-Wan2.2.git
-cd VBVR-Wan2.2
+git clone https://github.com/VBVR-PaperFactory/VBVR-Multi-step.git
+cd VBVR-Multi-step
 pip install -e .
 ```
 
-### 2. Download Base Models
-
-Before training, we recommand to download the base model weights first. This ensures all model files are available locally and avoids incomplete downloads during training.
-
-#### Wan2.2-I2V-A14B
-
-Download from [Hugging Face](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B):
+### 2. Download Base Model
 
 ```bash
 huggingface-cli download Wan-AI/Wan2.2-I2V-A14B --local-dir ./models/Wan-AI/Wan2.2-I2V-A14B
 ```
 
-Or from ModelScope:
+This is ~73 GB. The model includes high-noise DiT, low-noise DiT, T5 text encoder, and VAE.
+
+### 3. Prepare Training Data
+
+The training data should follow this structure:
+
+```
+data/multistep/
+├── Multi-01_maze_shortest_path_data-generator/
+│   └── Multi-01_maze_shortest_path_data-generator_task/
+│       ├── Multi-01_..._00000000/
+│       │   ├── first_frame.png       (1024×1024)
+│       │   ├── ground_truth.mp4      (1024×1024, ~34 frames, 16fps)
+│       │   ├── final_frame.png
+│       │   ├── prompt.txt            ([Scenario] + [Rules] + [Task])
+│       │   └── question_metadata.json
+│       ├── Multi-01_..._00000001/
+│       └── ...
+├── Multi-02_maze_circular_route_data-generator/
+└── ... (34 task types)
+```
+
+### 4. Generate Annotation Configs
 
 ```bash
-modelscope download Wan-AI/Wan2.2-I2V-A14B --local_dir ./models/Wan-AI/Wan2.2-I2V-A14B
+python scripts/generate_multistep_annotations.py \
+    --data_root data/multistep \
+    --output_configs configs/per_tasks \
+    --output_dataset_config configs/multistep_dataset.json \
+    --max_samples 5000
 ```
 
-#### LTX-2.3
+This creates per-task JSON annotation files and a dataset config. Use `--max_samples` to limit samples per task (we used 5,000 per task = 170K total).
+
+### 5. Verify Setup
 
 ```bash
-modelscope download DiffSynth-Studio/LTX-2.3-Repackage --local-dir ./models/DiffSynth-Studio/LTX-2.3-Repackage
+python scripts/test_model_load.py
 ```
 
-> **Note:** The training pipeline will attempt to download models automatically if they are not found locally. However, in multi-GPU distributed training, concurrent downloads can be unreliable — especially with `DIFFSYNTH_DOWNLOAD_SOURCE="huggingface"`, where `huggingface_hub` may silently return an incomplete local cache without raising an error. **We strongly recommend downloading all model files before starting training.**
+This checks: model files exist, JSON configs parse correctly, dataset annotations are valid, video files are accessible. It also generates `configs/model_paths_high_noise.json` and `configs/model_paths_low_noise.json`.
 
-### 3. Download Training Data (VBVR-Dataset)
-
-Download the VBVR-Dataset from Hugging Face and extract it into the `data/` directory:
+### 6. Train
 
 ```bash
-# Install huggingface_hub if not already installed
-pip install huggingface_hub
-
-# Download the dataset
-huggingface-cli download Video-Reason/VBVR-Dataset --repo-type dataset --local-dir ./data/VBVR-Dataset
+# Kill any existing GPU-occupying processes first
+# Then run:
+bash scripts/wan2.2-I2V-14B_multistep.sh
 ```
 
-After downloading, the training data config file [`configs/vbvr_dataset.json`](configs/vbvr_dataset.json) expects the following structure:
+Training runs in two phases (Wan2.2-I2V-A14B uses a dual-DiT architecture):
+
+| Phase | Model | Timestep Range | Description |
+|-------|-------|---------------|-------------|
+| Step 1/2 | High Noise (`dit`) | 0 – 0.358 | Learns rough structure/layout |
+| Step 2/2 | Low Noise (`dit2`) | 0.358 – 1.0 | Learns fine details/sharpness |
+
+**Key environment variable:** The training script sets `DIFFSYNTH_MODEL_BASE_PATH` to load models from the local `models/` directory. No network access is needed during training.
+
+### Training Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Base model | Wan-AI/Wan2.2-I2V-A14B (14B params) |
+| Resolution | 384 × 384 |
+| Frames | 33 (matching source video length) |
+| LoRA rank | 32 |
+| LoRA targets | q, k, v, o, ffn.0, ffn.2 |
+| Learning rate | 1e-5 |
+| Batch size | 1 per GPU |
+| Epochs | 1 |
+| Checkpoint interval | Every 500 steps |
+
+### Hardware Requirements
+
+Tested on 8× NVIDIA H200 (141 GB HBM3e each). Total training time: ~60 hours (30h per phase).
+
+Minimum: 8 GPUs with ≥40 GB VRAM each (with gradient checkpointing enabled, which is forced on automatically).
+
+### Outputs
+
+After training, LoRA checkpoints are saved to:
 
 ```
-data/
-└── VBVR-Dataset/
-    ├── G-11_handle_object_reappearance_data-generator/
-    │   ├── {task_id}/
-    │   │   ├── first_frame.png       (required)
-    │   │   ├── final_frame.png       (optional)
-    │   │   ├── prompt.txt            (required)
-    │   │   ├── ground_truth.mp4      (optional)
-    │   │   └── metadata.json         (optional)
-    │   └── ...
-    ├── G-12_grid_obtaining_award_data-generator/
-    └── ...
+outputs/multistep/
+├── high_noise/
+│   ├── step-500.safetensors
+│   ├── step-1000.safetensors
+│   ├── ...
+│   └── epoch-0.safetensors
+└── low_noise/
+    ├── step-500.safetensors
+    ├── ...
+    └── epoch-0.safetensors
 ```
 
-### 4. Training
-
-#### Wan2.2-I2V-A14B
-
-Wan2.2-I2V-A14B uses a MOE architecture with separate high-noise and low-noise models. The training script trains LoRA adapters for both:
-
-| Model | Timestep Range | Description |
-|-------|---------------|-------------|
-| High Noise (`dit`) | 0 – 0.358 | Handles early denoising steps |
-| Low Noise (`dit2`) | 0.358 – 1.0 | Handles later denoising steps |
+### Inference
 
 ```bash
-# Single-node multi-GPU training (default: 8 GPUs)
-bash scripts/Wan2.2-I2V-14B_vbvr_dataset.sh
-
-# Customize GPU/node count via environment variables
-NUM_GPUS=4 NUM_NODES=2 MASTER_ADDR=<master_ip> bash scripts/Wan2.2-I2V-14B_vbvr_dataset.sh
-```
-
-See [`scripts/Wan2.2-I2V-14B_vbvr_dataset.sh`](scripts/Wan2.2-I2V-14B_vbvr_dataset.sh) for all configurable parameters.
-
-#### LTX-2.3 I2AV
-
-LTX-2.3 training uses a two-stage approach: data processing (encoding) followed by LoRA training:
-
-```bash
-# Single-node multi-GPU training (default: 8 GPUs)
-bash scripts/LTX2.3-I2AV_vbvr_dataset.sh
-
-# Customize GPU/node count via environment variables
-NUM_GPUS=4 NUM_NODES=2 MASTER_ADDR=<master_ip> bash scripts/LTX2.3-I2AV_vbvr_dataset.sh
-```
-
-See [`scripts/LTX2.3-I2AV_vbvr_dataset.sh`](scripts/LTX2.3-I2AV_vbvr_dataset.sh) for all configurable parameters.
-
-
-### 5. Download Evaluation Data (VBVR-Bench)
-
-Download the VBVR-Bench evaluation data from Hugging Face:
-
-```bash
-huggingface-cli download Video-Reason/VBVR-Bench-Data --repo-type dataset --local-dir ./data/VBVR-Bench
-```
-
-The evaluation data has the following structure:
-
-```
-data/VBVR-Bench/
-├── In-Domain_50/
-│   ├── G-xxx_task_name_data-generator/
-│   │   ├── 00000/
-│   │   │   ├── first_frame.png
-│   │   │   ├── final_frame.png
-│   │   │   ├── ground_truth.mp4
-│   │   │   └── prompt.txt
-│   │   ├── 00001/
-│   │   └── ...
-│   └── ...
-└── Out-of-Domain_50/
-    └── ...
-```
-
-### 6. Before Evaluation, Inference on VBVR-Bench data
-
-#### Wan2.2-I2V-A14B Inference
-
-```bash
-# Evaluate with trained LoRA
 python examples/wanvideo/model_training/validate_lora/eval_vbvr_bench.py \
     --eval_root ./data/VBVR-Bench \
-    --output_root ./outputs/eval/VBVR-Wan2.2 \
-    --high_noise_lora_path ./outputs/Wan2.2-I2V-14B_vbvr/high_noise/epoch-0.safetensors \
-    --low_noise_lora_path ./outputs/Wan2.2-I2V-14B_vbvr/low_noise/epoch-0.safetensors
-
-# Evaluate base model (no LoRA)
-python examples/wanvideo/model_training/validate_lora/eval_vbvr_bench.py \
-    --eval_root ./data/VBVR-Bench \
-    --output_root ./outputs/eval/Wan2.2_base
+    --output_root ./outputs/eval/VBVR-Multi-step \
+    --high_noise_lora_path ./outputs/multistep/high_noise/epoch-0.safetensors \
+    --low_noise_lora_path ./outputs/multistep/low_noise/epoch-0.safetensors
 ```
 
-#### LTX-2.3 Inference
+## Task Types (34)
 
-```bash
-# Evaluate with trained LoRA
-python examples/ltx2/model_training/validate_lora/eval_vbvr_bench.py \
-    --eval_root ./data/VBVR-Bench \
-    --output_root ./outputs/eval/LTX2.3_lora \
-    --lora_path ./outputs/LTX2.3-I2AV_vbvr/model/epoch-0.safetensors 
+| Category | Tasks |
+|----------|-------|
+| **Planning / Pathfinding** | Maze shortest path, circular route, marker drawing, dual-dot pathfinding, route tracing, BFS tree traversal, Sokoban, sliding puzzle, Tower of Hanoi, snake routing, TSP reward collection |
+| **Logic / Computation** | Ordinal number sequence, word search, Sudoku, Numbrix, orthogonal Latin square, tents & trees, Turing machine execution, Langton's ant, chained math, pointer chasing, code pipeline, Conway's Game of Life |
+| **Physics** | Communicating vessels, multiple bounces, elastic bouncing, elastic collision, block sliding friction, target after reflection |
+| **Geometry** | Light reflection ray tracing, line intersection, perpendicular bisector, triangle orthocenter/incenter/circumcenter construction |
 
-# Evaluate base model (no LoRA)
-python examples/ltx2/model_training/validate_lora/eval_vbvr_bench.py \
-    --eval_root ./data/VBVR-Bench \
-    --output_root ./outputs/eval/LTX2.3_base 
-```
-### 7. Evaluation on VBVR-Bench
+## Offline Training (Air-Gapped Environments)
 
-After generating videos, you can evaluateyour results on the [VBVR-Bench](https://github.com/Video-Reason/VBVR-EvalKit) following the instructions.
+If your GPU server has no internet access:
 
-### 8. Submit Results to Leaderboard
+1. Download the base model on a machine with internet:
+   ```bash
+   huggingface-cli download Wan-AI/Wan2.2-I2V-A14B --local-dir ./models/Wan-AI/Wan2.2-I2V-A14B
+   ```
 
-After evaluation, you can submit your results to the [VBVR-Bench Leaderboard](https://huggingface.co/spaces/Video-Reason/VBVR-Bench-Leaderboard) following the instructions on the leaderboard page.
+2. Transfer the `models/` directory to the GPU server (shared filesystem, rsync, etc.)
 
-### Citation
+3. The training script automatically sets `DIFFSYNTH_MODEL_BASE_PATH` and `DIFFSYNTH_SKIP_DOWNLOAD=True` — no network calls during training.
 
-```bibtex
-@article{vbvr2026,
-      title={A Very Big Video Reasoning Suite}, 
-      author={Maijunxian Wang and Ruisi Wang and Juyi Lin and Ran Ji and Thaddäus Wiedemer and Qingying Gao and Dezhi Luo and Yaoyao Qian and Lianyu Huang and Zelong Hong and Jiahui Ge and Qianli Ma and Hang He and Yifan Zhou and Lingzi Guo and Lantao Mei and Jiachen Li and Hanwen Xing and Tianqi Zhao and Fengyuan Yu and Weihang Xiao and Yizheng Jiao and Jianheng Hou and Danyang Zhang and Pengcheng Xu and Boyang Zhong and Zehong Zhao and Gaoyun Fang and John Kitaoka and Yile Xu and Hua Xu and Kenton Blacutt and Tin Nguyen and Siyuan Song and Haoran Sun and Shaoyue Wen and Linyang He and Runming Wang and Yanzhi Wang and Mengyue Yang and Ziqiao Ma and Raphaël Millière and Freda Shi and Nuno Vasconcelos and Daniel Khashabi and Alan Yuille and Yilun Du and Ziming Liu and Bo Li and Dahua Lin and Ziwei Liu and Vikash Kumar and Yijiang Li and Lei Yang and Zhongang Cai and Hokin Deng},
-  journal = {arXiv preprint arXiv:2602.20159},
-  year = {2026}
-}
-```
+**Note:** The code sets `redirect_common_files=False` in the model loading pipeline. This prevents DiffSynth from redirecting T5/VAE files to a different HuggingFace repository, which would fail in offline environments.
 
-### Acknowledgements
+## Acknowledgements
 
-This project includes code that is modified from the original work by the DiffSynth-Studio team.
-
-* Source repository: https://github.com/modelscope/DiffSynth-Studio
-* Original project: **modelscope/DiffSynth-Studio**
-
-We gratefully acknowledge the authors and contributors of DiffSynth-Studio for their work.
-Please refer to the original repository for full details, updates, and licensing information.
+Built on [DiffSynth-Studio](https://github.com/modelscope/DiffSynth-Studio) and [VBVR-Wan2.2](https://github.com/Video-Reason/VBVR-Wan2.2).
