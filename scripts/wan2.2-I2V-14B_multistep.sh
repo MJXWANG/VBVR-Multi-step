@@ -2,14 +2,27 @@
 # =============================================================================
 # VBVR-Multi-step Training: Wan2.2-I2V-A14B + Multi-step Data
 # =============================================================================
-# Train fresh LoRA on Wan2.2-I2V-A14B base model using 340K multi-step
-# reasoning samples (34 task types).
+# Train LoRA adapters on Wan2.2-I2V-A14B base model using 170K multi-step
+# reasoning samples (34 task types × 5,000 samples each).
+#
+# Wan2.2-I2V-A14B uses a dual-DiT (MOE) architecture:
+#   - High Noise Model (dit):  timestep range [0, 0.358)
+#   - Low Noise Model (dit2):  timestep range [0.358, 1.0]
+# Each model is trained separately with its own LoRA adapter.
+#
+# Training config (verified on 8x H200, ~60h total):
+#   - Resolution: 384x384, 33 frames (matching source video length)
+#   - LoRA rank 32, targets: q,k,v,o,ffn.0,ffn.2
+#   - Learning rate: 1e-5, 1 epoch
+#   - Checkpoints saved every 500 steps
 #
 # Prerequisites:
-#   1. Multi-step data extracted to data/multistep/
-#   2. Annotation JSONs generated via generate_multistep_annotations.py
-#   3. Kill vLLM workers before running (they use all GPU memory)
-#   4. Proxy must be set for HuggingFace model download
+#   1. Download base model: hf download Wan-AI/Wan2.2-I2V-A14B --local-dir models/Wan-AI/Wan2.2-I2V-A14B
+#   2. Download data: hf download Video-Reason/VBVR-Dataset --repo-type dataset --local-dir data/VBVR-Dataset
+#      OR use custom multi-step data extracted to data/multistep/
+#   3. Generate annotations: python scripts/generate_multistep_annotations.py --data_root data/multistep --max_samples 5000
+#   4. Install: pip install -e .
+#   5. Kill vLLM workers before running (they use all GPU memory)
 # =============================================================================
 
 set -e
@@ -55,13 +68,15 @@ export DIFFSYNTH_DOWNLOAD_SOURCE="huggingface"
 echo "=================================="
 echo "VBVR-Multi-step Training"
 echo "=================================="
-echo "Model:           Wan-AI/Wan2.2-I2V-A14B (HuggingFace)"
+echo "Model:           Wan-AI/Wan2.2-I2V-A14B (local: ${DIFFSYNTH_MODEL_BASE_PATH})"
 echo "Dataset config:  ${DATASET_CONFIG_PATH}"
 echo "Resolution:      ${WIDTH}x${HEIGHT}, ${NUM_FRAMES} frames"
-echo "NUM_PROCESSES:   ${NUM_PROCESSES}"
+echo "NUM_PROCESSES:   ${NUM_PROCESSES} (${NUM_GPUS} GPUs x ${NUM_NODES} nodes)"
 echo "Learning Rate:   ${LEARNING_RATE}"
 echo "LoRA Rank:       ${LORA_RANK}"
 echo "Save every:      ${SAVE_STEPS} steps"
+echo "High Noise out:  ${HIGH_NOISE_OUTPUT_PATH}"
+echo "Low Noise out:   ${LOW_NOISE_OUTPUT_PATH}"
 echo "=================================="
 
 # ---- Train High Noise Model LoRA ----
