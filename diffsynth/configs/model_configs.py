@@ -124,6 +124,14 @@ wan_series = [
         "state_dict_converter": "diffsynth.utils.state_dict_converters.wan_video_dit.WanVideoDiTFromDiffusers"
     },
     {
+        # VBVR-Wan2.2 Diffusers format (Video-Reason/VBVR-Wan2.2) — I2V without image cross-attn
+        "model_hash": "8b85650bb749144f6b934ba7d76a8a0c",
+        "model_name": "wan_video_dit",
+        "model_class": "diffsynth.models.wan_video_dit.WanModel",
+        "extra_kwargs": {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 36, 'dim': 5120, 'ffn_dim': 13824, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 16, 'num_heads': 40, 'num_layers': 40, 'eps': 1e-06},
+        "state_dict_converter": "diffsynth.utils.state_dict_converters.wan_video_dit.WanVideoDiTFromDiffusers"
+    },
+    {
         # Example: ModelConfig(model_id="ByteDance/Video-As-Prompt-Wan2.1-14B", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors")
         "model_hash": "5f90e66a0672219f12d9a626c8c21f61",
         "model_name": "wan_video_vap",
