@@ -4,12 +4,30 @@ Train video generation models to perform multi-step reasoning — solving mazes,
 
 Built on [VBVR-Wan2.2](https://github.com/Video-Reason/VBVR-Wan2.2) (DiffSynth framework). Fine-tunes **Wan2.2-I2V-A14B** (14B parameter dual-DiT video diffusion model) with LoRA adapters on 170K multi-step reasoning videos.
 
+---
+
+## 📦 Code & Data Release for NeurIPS 2026 ED Submission
+
+This repository hosts the **training recipe** for VBVR-MultiStep. The full code and data release spans the following components:
+
+| Component | Location |
+|---|---|
+| **Training code** (this repo) | https://github.com/MJXWANG/VBVR-Multi-step |
+| **Inference harness** (`VBVR-InferKit`) | https://github.com/MJXWANG/VBVR-InferKit |
+| **36 task data generators** | https://github.com/vbvr-datafactory (`Multi-01_*` … `Multi-36_*`) |
+| **Training corpus + 180-instance evaluation split** | https://huggingface.co/datasets/Video-Reason/VBVR-MultiStep |
+| **Reasoning-tuned base model** (`VBVR-Wan2.2`, prior-suite checkpoint) | https://github.com/Video-Reason/VBVR-Wan2.2 |
+
+The training recipe and per-experiment hyperparameters are documented in §6 and Appendix H of the paper.
+
+---
+
 ## Quick Start
 
 ### 1. Installation
 
 ```bash
-git clone https://github.com/VBVR-PaperFactory/VBVR-Multi-step.git
+git clone https://github.com/MJXWANG/VBVR-Multi-step.git
 cd VBVR-Multi-step
 pip install -e .
 ```
