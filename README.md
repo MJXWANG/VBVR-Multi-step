@@ -6,7 +6,7 @@ Built on [VBVR-Wan2.2](https://github.com/Video-Reason/VBVR-Wan2.2) (DiffSynth f
 
 ---
 
-## 📦 Code & Data Release for NeurIPS 2026 ED Submission
+## 📦 Code & Data Release — VBVR-MultiStep
 
 This repository hosts the **training recipe** for VBVR-MultiStep. The full code and data release spans the following components:
 
