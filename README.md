@@ -193,14 +193,20 @@ python examples/wanvideo/model_training/validate_lora/eval_vbvr_bench.py \
     --low_noise_lora_path ./outputs/multistep/low_noise/epoch-0.safetensors
 ```
 
-## Task Types (34)
+## Reasoning Families (36 tasks across 6 families)
 
-| Category | Tasks |
-|----------|-------|
-| **Planning / Pathfinding** | Maze shortest path, circular route, marker drawing, dual-dot pathfinding, route tracing, BFS tree traversal, Sokoban, sliding puzzle, Tower of Hanoi, snake routing, TSP reward collection |
-| **Logic / Computation** | Ordinal number sequence, word search, Sudoku, Numbrix, orthogonal Latin square, tents & trees, Turing machine execution, Langton's ant, chained math, pointer chasing, code pipeline, Conway's Game of Life |
-| **Physics** | Communicating vessels, multiple bounces, elastic bouncing, elastic collision, block sliding friction, target after reflection |
-| **Geometry** | Light reflection ray tracing, line intersection, perpendicular bisector, triangle orthocenter/incenter/circumcenter construction |
+The 36 tasks (`Multi-01` … `Multi-36`) are organized into six reasoning families, matching §3 of the paper. See the [36 Task Generators table](#36-task-generators) above for per-task repositories.
+
+| Family | Tasks (6 each) |
+|---|---|
+| **Navigation** | Maze shortest path, maze circular route, maze marker drawing, dual-dot pathfinding, maze route tracing, BFS tree traversal |
+| **Planning** | Sokoban, sliding puzzle, Tower of Hanoi, snake dynamic routing, TSP reward collection, ordinal number sequence |
+| **CSP** (constraint satisfaction) | Word search path, Sudoku logic, Numbrix path-filling, orthogonal Latin square, Hashi bridges, tents and trees |
+| **Execution** | Turing machine execution, Langton's ant simulation, chained math calculation, pointer chasing arrows, chained code pipeline, Conway's Game of Life |
+| **Geometry** | Light reflection ray tracing, line intersection construction, perpendicular bisector, triangle orthocenter, triangle incenter, triangle circumcenter |
+| **Physics** | Fluid communicating vessels, multiple bounces target, elastic bouncing trajectory, elastic collision kinematics, block sliding friction, target after reflection |
+
+Note: training in this repository covers **34 of the 36** tasks per the paper §6 recipe; all 36 generators remain part of the released benchmark suite.
 
 ## Offline Training (Air-Gapped Environments)
 
