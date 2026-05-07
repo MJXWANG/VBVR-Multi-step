@@ -106,7 +106,7 @@ data/multistep/
 │       ├── Multi-01_..._00000001/
 │       └── ...
 ├── Multi-02_maze_circular_route_data-generator/
-└── ... (34 task types)
+└── ... (34 of the 36 task types used for training; see paper §6)
 ```
 
 ### 4. Generate Annotation Configs
